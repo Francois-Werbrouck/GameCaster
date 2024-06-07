@@ -19,6 +19,18 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            console.log(`Proxying request to: ${proxyReq.path}`);
+          });
+        },
+      }
+    }
   },
   build: {
     target: 'esnext',
