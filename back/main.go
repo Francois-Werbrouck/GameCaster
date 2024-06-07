@@ -28,9 +28,13 @@ func main() {
 		port = "8000"
 	}
 
-	database := openDB("db/dev.db")
+	database := OpenDB("db/dev.db")
 
-	route := mux.NewRouter()
+	Serve(mux.NewRouter(), database, port)
+
+}
+
+func Serve(route *mux.Router, database *gorm.DB, port string) {
 
 	// setup les middlewares les plus frequents
 	route.Use(mux.CORSMethodMiddleware(route))
@@ -193,7 +197,7 @@ func main() {
 	http.ListenAndServe(fmt.Sprintf(":%s", port), route)
 }
 
-func openDB(path string) *gorm.DB {
+func OpenDB(path string) *gorm.DB {
 
 	database, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
 
