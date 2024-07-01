@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"GameCaster/main/db"
+	"GameCaster/main/sqlobjects"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -21,7 +21,7 @@ func addRouteTest(router *mux.Router) {
 
 	router.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
 
-		user, ok := r.Context().Value("authToken").(db.User)
+		user, ok := r.Context().Value("authToken").(sqlobjects.User)
 		if !ok {
 			res := map[string]string{
 				"status": "failed",

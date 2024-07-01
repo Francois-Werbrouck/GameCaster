@@ -1,4 +1,4 @@
-package db
+package sqlobjects
 
 import (
 	"errors"
@@ -73,7 +73,7 @@ func GetUserByToken(token string, database *gorm.DB) (User, error) {
 		First(&user).Error
 
 	if err != nil {
-		return User{}, errors.New("Could not find user with token")
+		return User{}, errors.New("could not find user with token")
 	}
 
 	if user.Token.Expiration.Before(time.Now()) {

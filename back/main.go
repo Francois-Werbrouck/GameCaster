@@ -1,9 +1,9 @@
 package main
 
 import (
-	"GameCaster/main/db"
 	"GameCaster/main/server"
 	"GameCaster/main/server/routes/auth"
+	"GameCaster/main/sqlobjects"
 	"GameCaster/main/utils"
 	"context"
 	"encoding/json"
@@ -62,7 +62,7 @@ func Serve(route *mux.Router, database *gorm.DB, port string) {
 				next.ServeHTTP(w, r)
 				return
 			}
-			user, err := db.GetUserByToken(cookie.Value, database)
+			user, err := sqlobjects.GetUserByToken(cookie.Value, database)
 
 			if err != nil {
 				fmt.Println(err)
@@ -96,15 +96,15 @@ func Serve(route *mux.Router, database *gorm.DB, port string) {
 
 		err = json.Unmarshal(body, &userJson)
 
-		_, err = db.GetUserByEmail(userJson.Email, database)
+		_, err = sqlobjects.GetUserByEmail(userJson.Email, database)
 
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 
-				user, _ := db.CreateUser(userJson.Email, userJson.Password, database)
+				user, _ := sqlobjects.CreateUser(userJson.Email, userJson.Password, database)
 				fmt.Println("after create user and before CreateSessionToken")
 
-				token, _ := db.CreateSessionToken(user, database)
+				token, _ := sqlobjects.CreateSessionToken(user, database)
 				coockie := http.Cookie{
 					Name:     "authToken",
 					Value:    token,
@@ -149,7 +149,7 @@ func Serve(route *mux.Router, database *gorm.DB, port string) {
 			return
 		}
 
-		user, err := db.GetUserByEmail(userRequest.Email, database)
+		user, err := sqlobjects.GetUserByEmail(userRequest.Email, database)
 
 		if err != nil {
 
@@ -161,9 +161,9 @@ func Serve(route *mux.Router, database *gorm.DB, port string) {
 			return
 		}
 
-		if db.IsPasswordValid(userRequest.Password, user) {
+		if sqlobjects.IsPasswordValid(userRequest.Password, user) {
 
-			token, _ := db.CreateSessionToken(user, database)
+			token, _ := sqlobjects.CreateSessionToken(user, database)
 
 			coockie := http.Cookie{
 				Name:     "authToken",
@@ -205,8 +205,8 @@ func OpenDB(path string) *gorm.DB {
 		panic("could not open databse")
 	}
 
-	database.AutoMigrate(&db.UserToken{})
-	database.AutoMigrate(&db.User{})
+	database.AutoMigrate(&sqlobjects.UserToken{})
+	database.AutoMigrate(&sqlobjects.User{})
 
 	return database
 

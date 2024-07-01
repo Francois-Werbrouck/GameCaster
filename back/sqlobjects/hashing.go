@@ -1,4 +1,4 @@
-package db
+package sqlobjects
 
 import (
 	"crypto/rand"

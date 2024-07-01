@@ -1,4 +1,4 @@
-package db
+package sqlobjects
 
 var HashingParams = ArgonParams{
 	memory:      64 * 1024,
