@@ -8,11 +8,20 @@ import (
 	"gorm.io/gorm"
 )
 
+type UserRole string
+
+const (
+	RoleDM      UserRole = "DM"
+	RolePlayer  UserRole = "Player"
+	RoleCasting UserRole = "Casting"
+)
+
 type User struct {
 	gorm.Model
 	Name     string
 	Email    string
 	Password string
+	Role     UserRole  `gorm:"type:varchar(20)"`
 	Token    UserToken `gorm:"foreignKey:UserID;references:ID"`
 }
 
@@ -125,4 +134,8 @@ func CreateUser(email string, password string, database *gorm.DB) (User, error) 
 
 	return newUser, nil
 
+}
+
+func UpdateUserRole(userID uint, role UserRole, database *gorm.DB) error {
+	return database.Model(&User{}).Where("id = ?", userID).Update("role", role).Error
 }
