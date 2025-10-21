@@ -47,8 +47,6 @@ func Serve(route *mux.Router, database *gorm.DB, port string) {
 
 	route.HandleFunc("/api/status", server.StatusHandler).Methods("GET")
 
-	route.Handle("/", http.FileServer(http.Dir("../front/dist/"))).Methods("GET")
-
 	authRoute := route.PathPrefix("/api/auth").Subrouter()
 
 	authenticatedRoute := auth.HandleRouteWithAuth(route, "/api/authenticated")
@@ -78,6 +76,55 @@ func Serve(route *mux.Router, database *gorm.DB, port string) {
 
 		})
 	})
+
+	authenticatedRoute.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
+		user, ok := r.Context().Value("authToken").(sqlobjects.User)
+		if !ok {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"id":    user.ID,
+			"email": user.Email,
+			"name":  user.Name,
+			"role":  user.Role,
+		})
+	}).Methods("GET")
+
+	authenticatedRoute.HandleFunc("/user/role", func(w http.ResponseWriter, r *http.Request) {
+		user, ok := r.Context().Value("authToken").(sqlobjects.User)
+		if !ok {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		var body struct {
+			Role sqlobjects.UserRole `json:"role"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		if body.Role != sqlobjects.RoleDM && body.Role != sqlobjects.RolePlayer && body.Role != sqlobjects.RoleCasting {
+			http.Error(w, "Invalid role. Must be DM, Player, or Casting", http.StatusBadRequest)
+			return
+		}
+
+		if err := sqlobjects.UpdateUserRole(user.ID, body.Role, database); err != nil {
+			http.Error(w, "Failed to update role", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"status": "success",
+			"role":   string(body.Role),
+		})
+	}).Methods("POST")
 
 	authRoute.HandleFunc("/signup", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "This will soon be a nice page")
@@ -192,6 +239,14 @@ func Serve(route *mux.Router, database *gorm.DB, port string) {
 		}
 
 	}).Methods("POST")
+
+	// Serve static assets (must be after API routes)
+	route.PathPrefix("/assets/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("../front/dist/"))))
+	
+	// Serve index.html for all other routes (SPA routing) - must be last
+	route.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "../front/dist/index.html")
+	})
 
 	fmt.Printf("Listening at http://localhost:%s\n", port)
 	http.ListenAndServe(fmt.Sprintf(":%s", port), route)

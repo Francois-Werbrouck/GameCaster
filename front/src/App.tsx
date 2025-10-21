@@ -10,6 +10,7 @@ import { AuthProvider } from './context/AuthContext';
 const MainPage = lazy(() => import("./routes/MainPage"));
 const AuthPage = lazy(() => import("./routes/AuthPage"));
 const PasswordResetPage = lazy(() => import("./routes/auth/PasswordReset"));
+const SessionSelection = lazy(() => import("./routes/SessionSelection"));
 
 const App: Component = () => {
   return (
@@ -20,6 +21,7 @@ const App: Component = () => {
             <Route path="/" component={MainPage} />
             <Route path="/auth" component={AuthPage} />
             <Route path="/auth/reset" component={PasswordResetPage} />
+            <Route path="/session" component={SessionSelection} />
           </Router>
         </Nav>
       </AuthProvider>
