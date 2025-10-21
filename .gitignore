@@ -2,3 +2,5 @@ node_modules/
 dist/
 
 back/main
+back/db/*.db
+back/test_*.db
